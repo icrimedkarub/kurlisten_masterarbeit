@@ -1,7 +1,7 @@
 import pandas as pd
 from SPARQLWrapper import SPARQLWrapper, JSON
 
-file_path = '/Users/heima/Desktop/Háskoli/MA_DH/WS_23/Masterseminar/Masterarbeit/Kurlisten/Kurlisten_Excel/kurdata.xlsx'
+file_path = '/Users/heima/Desktop/Masterarbeit/Kurlisten/Kurlisten_Excel/kurdata.xlsx'
 
 def load_data(file_path):
     # Load the Excel data
