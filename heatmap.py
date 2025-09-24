@@ -42,8 +42,8 @@ heatmap_scaled = np.log1p(np.clip(heatmap, 0, vmax))
 fig, ax = plt.subplots(figsize=(10,10))
 ax.imshow(map_img, origin="upper", interpolation="none")
 
-ax.imshow(heatmap_scaled, cmap="plasma", alpha=0.2)
+ax.imshow(heatmap_scaled, cmap="inferno", alpha=0.4)
 ax.axis("off")
 
-plt.savefig("heatmap_plasma2.png", dpi=300, bbox_inches="tight", pad_inches=0)
+plt.savefig("heatmap_inferno4.png", dpi=300, bbox_inches="tight", pad_inches=0)
 # plt.show()
