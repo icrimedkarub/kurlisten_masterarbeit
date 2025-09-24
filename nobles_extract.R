@@ -4,11 +4,11 @@ library(readxl)
 install.packages("openxlsx")
 library(openxlsx)
 
-# 1. Read  Excel file
+# Read  Excel file
 file_path <- "/Users/heima/Desktop/Masterarbeit/Kurlisten/Kurlisten_Excel/Nobles_with_ranks.xlsx"
 data_nobles2 <- read_excel(file_path)
 
-# 2. Define lookup: regex patterns for noble ranks
+# Define lookup: regex patterns for noble ranks
 rank_patterns <- c(
   "Kaiser" = "Kaiser",
   "Kaiserin" = "Kaiserin",
@@ -27,13 +27,13 @@ rank_patterns <- c(
   "(?<![iI])Baron" = "Baron",
   "Ritter" = "Ritter",
   "Edler" = "Edler",
-  "Edle" = "Edle"
+  "Edle" = "Edle",
+  "Prinzessin" = "Prinzessin"
 )
 
-
-
-# 3. Function to extract the first matching rank
+# Function to extract the first matching rank
 extract_rank <- function(name) {
+  if (is.na(name)) return(NA_character_)  
   for (pattern in names(rank_patterns)) {
     if (str_detect(name, regex(pattern))) {
       return(rank_patterns[[pattern]])
@@ -46,7 +46,7 @@ extract_rank <- function(name) {
   return(NA_character_)
 }
 
-# 4. Apply function ONLY to missing Rank rows
+# Apply function ONLY to missing Rank rows
 data_nobles2 <- data_nobles2 %>%
   mutate(Rank = if_else(
     is.na(Rank) | Rank == "",
@@ -54,5 +54,5 @@ data_nobles2 <- data_nobles2 %>%
     Rank
   ))
 
-# 5. Save back to Excel
-write.xlsx(data_nobles, "/Users/heima/Desktop/Masterarbeit/Kurlisten/Kurlisten_Excel/Nobles_with_ranks2.xlsx")
+# Save back to Excel
+write.xlsx(data_nobles2, "/Users/heima/Desktop/Masterarbeit/Kurlisten/Kurlisten_Excel/Nobles_with_ranks2.xlsx")
