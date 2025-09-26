@@ -42,5 +42,5 @@ def update_countries(file_path):
     print(f"Updated Excel file saved to {updated_file_path}.")
 
 # Specify the path to your Excel file
-file_path = '/Users/heima/Desktop/Masterarbeit/Kurlisten/Kurlisten_Excel/kurdata.xlsx'
+file_path = '/Users/heima/Desktop/Masterarbeit/Kurlisten/Kurlisten_Excel/spadata.xlsx'
 update_countries(file_path)
