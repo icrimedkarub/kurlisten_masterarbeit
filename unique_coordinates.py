@@ -55,4 +55,4 @@ coords_df.rename(columns={"index": "Address"}, inplace=True)
 df_with_coords = df.merge(coords_df, on="Address", how="left")
 
 # Save output
-df_with_coords.to_excel("//Users/heima/Desktop/Masterarbeit/Kurlisten/Kurlisten_Excel/addresses_with_coords_test.xlsx", index=False)
+df_with_coords.to_excel("//Users/heima/Desktop/Masterarbeit/Kurlisten/Kurlisten_Excel/addresses_with_coords.xlsx", index=False)
