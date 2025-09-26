@@ -10,7 +10,7 @@ library(tidyr)
 library(readr)
 
 # Load the data
-file_path <- "/Users/heima/Desktop/Masterarbeit/Kurlisten/Kurlisten_Excel/kurdata.xlsx"
+file_path <- "/Users/heima/Desktop/Masterarbeit/Kurlisten/Kurlisten_Excel/spadata.xlsx"
 data <- read_excel(file_path)
 
 file_path <- "/Users/heima/Desktop/Masterarbeit/Kurlisten/Kurlisten_Excel/comparison_data.xlsx"
