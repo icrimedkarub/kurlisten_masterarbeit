@@ -329,12 +329,22 @@ print(plot)
 
 
 ########### Plot 7 Three Military Groups
-# Prepare the data
-occupation_visitors <- data %>%
-  filter(Normalised_Categorised_Occupation %in% c("Below Feldwebel", "Junior Officers", "Senior Officers")) %>%
-  group_by(Year, Normalised_Categorised_Occupation) %>%
+# Step 1: Create a unified occupation category
+military_groups <- data %>%
+  mutate(
+    Military_Group = case_when(
+      Person == "Feldwebel abwärts im k. k. Militärbadehaus" ~ "Below Feldwebel",
+      Normalised_Categorised_Occupation %in% c("Junior Officers", "Senior Officers") ~ Normalised_Categorised_Occupation,
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  filter(!is.na(Military_Group))   # keep only the three groups of interest
+
+# Step 2: Summarise by year and group
+occupation_visitors <- military_groups %>%
+  group_by(Year, Military_Group) %>%
   summarise(Total_Visitors = sum(Party, na.rm = TRUE), .groups = "drop") %>%
-  complete(Year, Normalised_Categorised_Occupation, fill = list(Total_Visitors = 0)) %>%
+  complete(Year, Military_Group, fill = list(Total_Visitors = 0)) %>%
   group_by(Year) %>%
   mutate(
     Year_Total = sum(Total_Visitors, na.rm = TRUE),
@@ -342,40 +352,38 @@ occupation_visitors <- data %>%
   ) %>%
   ungroup()
 
-# Compute totals across all years
+# Step 3: Totals across all years for ordering
 totals <- occupation_visitors %>%
-  group_by(Normalised_Categorised_Occupation) %>%
+  group_by(Military_Group) %>%
   summarise(Total_AllYears = sum(Total_Visitors, na.rm = TRUE), .groups = "drop")
 
-# Order categories by total (largest at top of stack)
 occupation_order <- totals %>%
   arrange(desc(Total_AllYears)) %>%
-  pull(Normalised_Categorised_Occupation)
+  pull(Military_Group)
 
 occupation_visitors <- occupation_visitors %>%
   mutate(
-    Normalised_Categorised_Occupation = factor(Normalised_Categorised_Occupation, levels = occupation_order),
-    Category_Label = paste0(Normalised_Categorised_Occupation, " (", totals$Total_AllYears[match(Normalised_Categorised_Occupation, totals$Normalised_Categorised_Occupation)], ")")
+    Military_Group = factor(Military_Group, levels = occupation_order)
   )
 
-# Define colors
+# Step 4: Define colors
 colors <- c(
   "Senior Officers" = "darkred",
   "Junior Officers" = "#E0CA3C",
   "Below Feldwebel" = "#2D3047"
 )
 
-# Plot
+# Step 5: Plot
 ggplot(occupation_visitors, aes(x = as.factor(Year), y = Percentage,
-                                fill = Normalised_Categorised_Occupation)) +
+                                fill = Military_Group)) +
   geom_bar(stat = "identity", position = "stack") +
   scale_fill_manual(
     values = colors,
-    labels = paste0(levels(occupation_visitors$Normalised_Categorised_Occupation),
+    labels = paste0(levels(occupation_visitors$Military_Group),
                     " (",
                     totals$Total_AllYears[match(
-                      levels(occupation_visitors$Normalised_Categorised_Occupation),
-                      totals$Normalised_Categorised_Occupation
+                      levels(occupation_visitors$Military_Group),
+                      totals$Military_Group
                     )],
                     ")")
   ) +
@@ -388,7 +396,7 @@ ggplot(occupation_visitors, aes(x = as.factor(Year), y = Percentage,
   scale_y_continuous(
     breaks = seq(0, 100, by = 10),
     labels = percent_format(scale = 1),
-    expand = expansion(mult = c(0, 0.02))  # small margin above 100%
+    expand = expansion(mult = c(0, 0.02))
   ) +
   theme_minimal() +
   theme(
@@ -405,36 +413,61 @@ ggplot(occupation_visitors, aes(x = as.factor(Year), y = Percentage,
   )
 
 ############## Plot 8 Non-listed Visitors
-# Filter and prepare the data
+# Define mapping of Person patterns -> categories
+person_to_category <- c(
+  "Untergebracht im Armenhaus errichteten Kinderspital" = "Kinderspital",
+  "Untergebracht im Marienspital"                       = "Marienspital",
+  "Feldwebel abwärts im k. k. Militärbadehaus"          = "Militärbadehaus",
+  "Gefolge"                                             = "Schloss Weilburg",
+  "Untergebracht im Todesco'schen Hospital"             = "Todescosches Hospital",
+  "Untergebracht im k. k. Wohltätigkeitshaus"           = "Wohltätigkeitshaus"
+  
+  
+  
+)
+
+# Filter rows where Person matches any of the above keys
 occupation_unnamed_subset <- data %>%
-  filter(Address %in% c("Marienspital", "Kinderspital",
-                                                  "Todescosches Hospital", "Wohltätigkeitshaus",
-                                                  "Schloss Weilburg", "Militärbadehaus"),
-         !is.na(Year)) %>%
-  group_by(Year, Address) %>%
+  filter(Person %in% names(person_to_category), !is.na(Year)) %>%
+  mutate(Category = person_to_category[Person]) %>%
+  group_by(Year, Category) %>%
   summarise(Total_Visitors = sum(Party, na.rm = TRUE), .groups = "drop")
 
 # Compute totals per category across all years
 totals_per_category <- occupation_unnamed_subset %>%
-  group_by(Address) %>%
+  group_by(Category) %>%
   summarise(Total_AllYears = sum(Total_Visitors, na.rm = TRUE), .groups = "drop")
 
-# Join totals back and create labels for the legend
+# Add labels for legend
 occupation_unnamed_subset <- occupation_unnamed_subset %>%
-  left_join(totals_per_category, by = "Address") %>%
-  mutate(Category_Label = paste0(Address, " (", Total_AllYears, ")"))
+  left_join(totals_per_category, by = "Category") %>%
+  mutate(Category_Label = paste0(Category, " (", Total_AllYears, ")"))
 
-# Define colours for the six categories
-chosen_colours <- c("#F4E04D", "#2D3047", "darkgreen", "orange", "darkblue", "darkred")
+# Fix order of legend
+category_order <- c("Kinderspital", "Marienspital", "Militärbadehaus", "Schloss Weilburg", "Todescosches Hospital", "Wohltätigkeitshaus"
+                    )
 
-# Create a named colour map
-unique_labels <- unique(occupation_unnamed_subset$Category_Label)
-colour_map <- setNames(chosen_colours[seq_along(unique_labels)], unique_labels)
+occupation_unnamed_subset$Category <- factor(
+  occupation_unnamed_subset$Category, 
+  levels = category_order
+)
 
-# Plot (stacked version)
+occupation_unnamed_subset$Category_Label <- factor(
+  occupation_unnamed_subset$Category_Label,
+  levels = paste0(category_order, " (", 
+                  totals_per_category$Total_AllYears[
+                    match(category_order, totals_per_category$Category)
+                  ], ")")
+)
+
+# Define fixed colours
+chosen_colours <- c("darkred", "#F4E04D", "#2D3047", "darkgreen", "orange", "darkblue")
+colour_map <- setNames(chosen_colours, levels(occupation_unnamed_subset$Category_Label))
+
+# Plot
 p <- ggplot(occupation_unnamed_subset, aes(x = factor(Year), y = Total_Visitors, fill = Category_Label)) +
   geom_bar(stat = "identity", position = "stack") +
-  scale_fill_manual(values = colour_map) +
+  scale_fill_manual(values = colour_map, drop = FALSE) +
   scale_y_continuous(
     limits = c(0, 2500),
     breaks = seq(0, 2500, by = 250)
@@ -450,7 +483,7 @@ p <- ggplot(occupation_unnamed_subset, aes(x = factor(Year), y = Total_Visitors,
     axis.text.x = element_text(size = 16, margin = margin(t = -15)),
     axis.text.y = element_text(size = 16),
     axis.title.x = element_text(size = 18),
-    axis.title.y = element_text(size = 18, vjust = 1), # shift y title slightly left
+    axis.title.y = element_text(size = 18, vjust = 1),
     plot.title = element_text(size = 18, face = "bold", vjust = -1, hjust = 1),
     legend.title = element_text(size = 18),
     legend.text = element_text(size = 16),
@@ -459,7 +492,6 @@ p <- ggplot(occupation_unnamed_subset, aes(x = factor(Year), y = Total_Visitors,
     panel.grid.major.y = element_line(color = "gray80")
   )
 
-# Print the plot
 print(p)
 
 
