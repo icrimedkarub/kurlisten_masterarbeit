@@ -5,7 +5,7 @@ install.packages("openxlsx")
 library(openxlsx)
 
 # Read  Excel file
-file_path <- "/Users/heima/Desktop/Masterarbeit/Kurlisten/Kurlisten_Excel/nobles_with_ranks.xlsx"
+file_path <- "/Users/heima/Desktop/Masterarbeit/Kurlisten/Kurlisten_Excel/nobles_without_ranks.xlsx"
 data_nobles2 <- read_excel(file_path)
 
 # Define lookup: regex patterns for noble ranks
@@ -55,4 +55,4 @@ data_nobles2 <- data_nobles2 %>%
   ))
 
 # Save back to Excel
-write.xlsx(data_nobles2, "/Users/heima/Desktop/Masterarbeit/Kurlisten/Kurlisten_Excel/Nobles_with_ranks2.xlsx")
+write.xlsx(data_nobles2, "/Users/heima/Desktop/Masterarbeit/Kurlisten/Kurlisten_Excel/nobles_with_ranks.xlsx")
