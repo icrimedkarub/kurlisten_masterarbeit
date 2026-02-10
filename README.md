@@ -6,11 +6,13 @@ This repository contains the files and scripts used for a master's thesis in Dig
 kurlisten_masterarbeit/
 │
 ├── scripts/
+│   ├── country_names.py
 │   ├── excel_to_json.py
 │   ├── heatmap.py
 │   ├── nobles_extract.r
-│   ├── scrape_country.py
 │   ├── scrape_QID.py
+│   ├── scrape_coordinates.py
+│   ├── scrape_country.py
 │   ├── script_thesis.r
 │   └── unique_coordinates.py
 │
