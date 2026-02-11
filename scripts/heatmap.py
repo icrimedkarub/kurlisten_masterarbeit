@@ -38,12 +38,35 @@ heatmap = gaussian_filter(heatmap, sigma=15)
 vmax = np.percentile(heatmap, 99)
 heatmap_scaled = np.log1p(np.clip(heatmap, 0, vmax))
 
-# --- Step 5: Overlay heatmap on historical map (clean output) ---
+# --- Step 5: Overlay heatmap with capped alpha so map remains visible ---
+import matplotlib.pyplot as plt
+from matplotlib import colors
+import numpy as np
+
 fig, ax = plt.subplots(figsize=(10,10))
+
+# Show the basemap
 ax.imshow(map_img, origin="upper", interpolation="none")
 
-ax.imshow(heatmap_scaled, cmap="hot", alpha=0.4)
-ax.axis("off")
+# --- Scale and boost heatmap ---
+vmax = np.percentile(heatmap, 99)
+heat_clipped = np.clip(heatmap, 0, vmax)
 
-plt.savefig("heatmap_hot4.png", dpi=300, bbox_inches="tight", pad_inches=0)
+# Boost small densities (nonlinear scaling)
+heat_boosted = np.sqrt(heat_clipped / heat_clipped.max())  # values 0–1
+
+# --- Cap the alpha so map is always visible ---
+alpha_max = 0.8  # maximum opacity
+heat_alpha = heat_boosted * alpha_max  # scale alpha
+
+# Create RGBA heatmap
+cmap = plt.cm.hot
+heat_rgba = cmap(heat_boosted)
+heat_rgba[..., -1] = heat_alpha  # apply capped alpha
+
+# Overlay heatmap
+ax.imshow(heat_rgba, origin="upper", interpolation="gaussian")
+
+ax.axis("off")
+plt.savefig("heatmap_glow_capped.png", dpi=300, bbox_inches="tight", pad_inches=0)
 plt.show()

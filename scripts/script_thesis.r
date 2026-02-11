@@ -590,7 +590,6 @@ nobles_vs_non <- spa_data %>%
   ) %>%
   ungroup()
 
-
 ggplot(
   nobles_vs_non,
   aes(x = factor(Year), y = Percentage, fill = Group)
@@ -908,7 +907,7 @@ plot_military_distribution <- ggplot(
 print(plot_military_distribution)
 
 ############################################################
-## Plot 13: Accommodation by establishment type
+## Plot 13: Top 10 by establishment type
 ############################################################
 
 # Ignore the top 2 addresses and get the next 10
@@ -1012,7 +1011,132 @@ ggplot(
   )
 
 ############################################################
-## Plot 14: Non-listed visitors
+## Plot 14: Accommodation Types (Percentage Distribution)
+############################################################
+
+# Prepare data
+accommodation_by_year <- spa_data %>%
+  filter(
+    !is.na(Year),
+    !is.na(Establishment_Type)
+  ) %>%
+  group_by(Year, Establishment_Type) %>%
+  summarise(
+    Total_Visitors = sum(Party, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  complete(
+    Year,
+    Establishment_Type,
+    fill = list(Total_Visitors = 0)
+  ) %>%
+  group_by(Year) %>%
+  mutate(
+    Year_Total = sum(Total_Visitors),
+    Percentage = if_else(
+      Year_Total == 0,
+      0,
+      Total_Visitors / Year_Total * 100
+    )
+  ) %>%
+  ungroup()
+
+# Totals across all years (for legend labels)
+accommodation_totals <- accommodation_by_year %>%
+  group_by(Establishment_Type) %>%
+  summarise(
+    Total_AllYears = sum(Total_Visitors),
+    .groups = "drop"
+  )
+
+# Total visitors across all years (for legend title)
+total_visitors_all <- sum(accommodation_totals$Total_AllYears)
+
+# Order categories
+accommodation_order <- accommodation_totals %>%
+  arrange((Total_AllYears)) %>%
+  pull(Establishment_Type)
+
+accommodation_by_year <- accommodation_by_year %>%
+  mutate(
+    Establishment_Type = factor(
+      Establishment_Type,
+      levels = accommodation_order
+    )
+  )
+
+# Legend labels
+legend_labels <- setNames(
+  paste0(
+    accommodation_order,
+    " (",
+    accommodation_totals$Total_AllYears[
+      match(
+        accommodation_order,
+        accommodation_totals$Establishment_Type
+      )
+    ],
+    ")"
+  ),
+  accommodation_order
+)
+
+# Named colour map
+accommodation_colors <- c(
+  "Hotel" = color_palette$navy,
+  "Inn" = color_palette$lightblue,
+  "Palace" = color_palette$orange,
+  "Charitable Institution" = color_palette$darkgreen,
+  "Private" = color_palette$salmon,
+  "Spa" = color_palette$purple
+)
+
+
+# Plot
+plot_accommodation_distribution <- ggplot(
+  accommodation_by_year,
+  aes(
+    x = factor(Year),
+    y = Percentage,
+    fill = Establishment_Type
+  )
+) +
+  geom_col() +
+  
+  scale_fill_manual(
+    values = accommodation_colors,
+    breaks = accommodation_order,
+    labels = legend_labels,
+    drop = FALSE
+  ) +
+  
+  scale_y_continuous(
+    breaks = seq(0, 100, by = 10),
+    labels = scales::percent_format(scale = 1),
+    expand = expansion(mult = c(0, 0.02))
+  ) +
+  
+  labs(
+    title = "Accommodation Types of Visitors (1850–1859)",
+    x     = "Years",
+    y     = "Percentage of Visitors",
+    fill  = paste0(
+      "Type (Total: ",
+      total_visitors_all,
+      ")"
+    )
+  ) +
+  
+  common_theme +
+  theme(
+    panel.grid.major.x = element_blank(),
+    axis.text.x = element_text(vjust = 1.5)
+  )
+
+print(plot_accommodation_distribution)
+
+############################################################
+## Plot 15: Non-listed visitors by Accommodation
 ############################################################
 
 # Mapping from Person to Category
@@ -1109,11 +1233,11 @@ ggplot(
     breaks = seq(0, 2500, by = 250)
   ) +
   labs(
-    title = "Non-listed Visitors by Place (1850–1859)",
+    title = "Unnamed Visitors by Establishment (1850–1859)",
     x = "Years",
     y = "Visitors",
     fill = paste0(
-      "Place (Total: ",
+      "Establishment (Total: ",
       total_nonlisted_visitors,
       ")"
     )
