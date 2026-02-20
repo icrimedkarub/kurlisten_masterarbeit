@@ -951,9 +951,9 @@ address_map <- tibble::tibble(
     "Hotel",
     "Palace",
     "Charitable Institution",
-    "Hotel",
+    "Spa",
     "Private",
-    "Palace",
+    "Private",
     "Inn",
     "Inn",
     "Charitable Institution",
@@ -986,6 +986,7 @@ ggplot(
       "Palace" = color_palette$orange,
       "Charitable Institution" = color_palette$darkgreen,
       "Private" = color_palette$salmon,
+      "Spa" = color_palette$purple,
       "Other" = "gray50"
     )
   ) +
@@ -1309,3 +1310,45 @@ occupation_table <- spa_data %>%
   arrange(Normalised_Categorised_Occupation)
 
 print(occupation_table)
+
+############################################################
+## Share of Officers Staying at Militärbadehaus
+############################################################
+
+# Total Junior Officers in dataset
+total_junior <- spa_data %>%
+  filter(Normalised_Categorised_Occupation == "Junior Officers") %>%
+  summarise(Total = sum(Party, na.rm = TRUE)) %>%
+  pull(Total)
+
+# Junior Officers at Vöslauer Straße 8
+junior_at_address <- spa_data %>%
+  filter(
+    Normalised_Categorised_Occupation == "Junior Officers",
+    Address_2023 == "Vöslauer Straße 8"
+  ) %>%
+  summarise(Total = sum(Party, na.rm = TRUE)) %>%
+  pull(Total)
+
+# Percentage
+percentage_junior <- (junior_at_address / total_junior) * 100
+
+# Total Senior Officers in dataset
+total_senior <- spa_data %>%
+  filter(Normalised_Categorised_Occupation == "Senior Officers") %>%
+  summarise(Total = sum(Party, na.rm = TRUE)) %>%
+  pull(Total)
+
+senior_at_address <- spa_data %>%
+  filter(
+    Normalised_Categorised_Occupation == "Senior Officers",
+    Address_2023 == "Vöslauer Straße 8"
+  ) %>%
+  summarise(Total = sum(Party, na.rm = TRUE)) %>%
+  pull(Total)
+
+percentage_senior <- (senior_at_address / total_senior) * 100
+
+# Print results
+percentage_junior
+percentage_senior
