@@ -1,5 +1,5 @@
-# kurlisten_masterarbeit
-This repository contains the files and scripts used for a master's thesis in Digital Humanities at the University of Vienna.
+#  A digital humanities approach to the Kurlisten of Baden bei Wien (1850-1859)
+This repository contains the files and scripts used for a master's [thesis](https://doi.org/10.25365/thesis.80855) in Digital Humanities at the University of Vienna.
 
 ## Project structure
 ```php
